@@ -7,6 +7,7 @@
 Class Render {
 	protected $view;
 	protected $vars = array();
+	protected $preg_replace_callback_vars = array();
 	protected $headers = array(
 		'statusCode' => 200, // todo
 	);
@@ -37,11 +38,11 @@ Class Render {
 		return $this->headers;
 	}
 
-	private function _preg_replace_callback1($matche) {
-			return isset($vars[$matche[1]]) ? $vars[$matche[1]] : null;
+	private function _preg_replace_callback1(array $matche) {
+			return isset($this->preg_replace_callback_vars[$matche[1]]) ? $this->preg_replace_callback_vars[$matche[1]] : null;
 	}
 
-	private function _preg_replace_callback2($matche) {
+	private function _preg_replace_callback2(array $matche) {
 			switch(trim(strtolower($matche[1]))) {
 				case 'print_r':
 				case 'var_dump':
@@ -56,6 +57,7 @@ Class Render {
 	protected function _ob_start($buffer, array $vars = null) {
 
 		$vars = array_merge($this->vars, (array) $vars);
+		$this->preg_replace_callback_vars = $vars;
 		$_this = $this;
 
 		$buffer = preg_replace_callback('`\{\{ \$([a-zA-Z0-9_]+) \}\}`sUi', array($this, '_preg_replace_callback1'), $buffer);
