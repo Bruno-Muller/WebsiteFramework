@@ -1,6 +1,7 @@
 <?php
 /**
  * @author Olivarès Georges (https://github.com/Thiktak)
+ * @author Bruno Muller (https://github.com/Bruno-Muller)
  */
 
 Class Render {
@@ -36,16 +37,11 @@ Class Render {
 		return $this->headers;
 	}
 
-	protected function _ob_start($buffer, array $vars = null) {
-		
-		$vars = array_merge($this->vars, (array) $vars);
-		$_this = $this;
-
-		$buffer = preg_replace_callback('`\{\{ \$([a-zA-Z0-9_]+) \}\}`sUi', function($matche) use($_this, $vars) {
+	private function _preg_replace_callback1($matche) {
 			return isset($vars[$matche[1]]) ? $vars[$matche[1]] : null;
-		}, $buffer);
+	}
 
-		$buffer = preg_replace_callback('`\{\{ ([a-zA-Z0-9_]+)\((.*)\) \}\}`sUi', function($matche) use($_this) {
+	private function _preg_replace_callback2($matche) {
 			switch(trim(strtolower($matche[1]))) {
 				case 'print_r':
 				case 'var_dump':
@@ -55,8 +51,17 @@ Class Render {
 					break;
 			}
 			return 'func$1($2)';
-		}, $buffer);
+		}
 
+	protected function _ob_start($buffer, array $vars = null) {
+
+		$vars = array_merge($this->vars, (array) $vars);
+		$_this = $this;
+
+		$buffer = preg_replace_callback('`\{\{ \$([a-zA-Z0-9_]+) \}\}`sUi', array($this, '_preg_replace_callback1'), $buffer);
+
+		$buffer = preg_replace_callback('`\{\{ ([a-zA-Z0-9_]+)\((.*)\) \}\}`sUi', array($this, '_preg_replace_callback2'), $buffer);
+		
 		return $buffer;
 	}
 
